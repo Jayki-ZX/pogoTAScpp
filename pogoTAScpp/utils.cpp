@@ -52,7 +52,7 @@ std::string parseInputs(bool left, bool right, bool jump) {
     return output;
 }
 
-DWORD initial_address = { 0x37A34C2 }; // value found following GUIDE.txt
+DWORD initial_address = {  }; // value found following GUIDE.txt
 DWORD address = initial_address; 
 
 // Overwrites "frames" frames with the given inputs (left, right, jump).

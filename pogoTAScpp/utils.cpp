@@ -10,7 +10,7 @@
 // * x frames; [inputs]
 // ... etc ...
 void extractRun() {
-    /* code for reference
+    /* todo code for reference
     std::ofstream myfile;
     myfile.open("example.txt");
     myfile << "Writing this to a file.\n";
@@ -52,7 +52,7 @@ std::string parseInputs(bool left, bool right, bool jump) {
     return output;
 }
 
-DWORD initial_address = {  }; // value found following GUIDE.txt
+DWORD initial_address = {  }; // value found following the README (section "finding initial memory")
 DWORD address = initial_address; 
 
 // Overwrites "frames" frames with the given inputs (left, right, jump).
@@ -91,7 +91,9 @@ int main()
     //
 
     // Create TAS Pogostuck run
-    writeInputsByFrames(processHandle, 60, 0, 1, 0);
+
+    // Example --> "For 60 frames, execute the following inputs: left = 0, right = 1, jump = 1 --> "rotate right jumping""
+    writeInputsByFrames(processHandle, 60, 0, 1, 1);
 
     return 0;
 }

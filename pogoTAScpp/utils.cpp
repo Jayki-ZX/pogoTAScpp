@@ -52,7 +52,7 @@ std::string parseInputs(bool left, bool right, bool jump) {
     return output;
 }
 
-DWORD initial_address = {  }; // value found following the README (section "finding initial memory")
+DWORD initial_address = { NULL }; // value found following the README (section "finding initial memory")
 DWORD address = initial_address; 
 
 // Overwrites "frames" frames with the given inputs (left, right, jump).
@@ -75,6 +75,11 @@ void writeInputsByFrames(HANDLE processHandler, int frames, bool left, bool righ
 
 int main()
 {
+    if (initial_address == NULL) {
+        std::cout << "Remember to get the starting tas block address before running the project.\n";
+        return 0;
+    }
+
     std::cout << "Started pogotas.\n";
 
     // Get handler for Pogostuck process

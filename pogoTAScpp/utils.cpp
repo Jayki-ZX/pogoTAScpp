@@ -4,30 +4,15 @@
 #include <TlHelp32.h>
 #include <fstream>
 
-// Takes the currently recorded run on memory and stores it in a file with the following format:
-// * 20 frames; up, down 
-// * 14 frames; down, left
-// * x frames; [inputs]
-// ... etc ...
-void extractRun() {
-    /* todo code for reference
-    std::ofstream myfile;
-    myfile.open("example.txt");
-    myfile << "Writing this to a file.\n";
-    myfile.close();
-    
-    logic
-    current frame = 0
-    frames = 1
-    if frames + current_frame >= 28800 stop recording and do the last record
-    else
-    if inputs of current_frame == inputs of current_frame+1
-        current_frame++
-        frames++
-    else
-        write "[frames] frames; parseInput(inputofcurrentframe)
+// global variables (ill maybe change this logic in the future)
+DWORD initial_address = { NULL }; // value found following the README (section "finding initial memory")
+DWORD address = initial_address;
 
-    */
+//in frames
+int MAX_RECORDING_LENGTH = 5000;
+
+void saveCommand(std::ofstream file, int frames, bool left, bool right, bool jump) {
+
 }
 
 // Returns given inputs as a string
@@ -52,8 +37,63 @@ std::string parseInputs(bool left, bool right, bool jump) {
     return output;
 }
 
-DWORD initial_address = { NULL }; // value found following the README (section "finding initial memory")
-DWORD address = initial_address; 
+// Takes the currently recorded run on memory and stores it in a file with the following format:
+// writeInputsByFrames(processHandle, 60, 0, 1, 1); 
+// writeInputsByFrames(processHandle, x, b, b, b);
+// ... etc ...
+void extractRun(HANDLE processHandler) {
+    std::ofstream run_file;
+    run_file.open("TASrun.txt");
+    
+    int frames = 1;
+
+    bool prev_left;
+    bool prev_right;
+    bool prev_jump;
+
+    bool current_left;
+    bool current_right;
+    bool current_jump;
+
+    //ReadProcessMemory(processHandler, (LPCVOID)address, &up, 1, NULL);
+    //ReadProcessMemory(processHandler, (LPVOID)(address + 1), &down, 1, NULL);
+    ReadProcessMemory(processHandler, (LPCVOID)(address + 2), &prev_left, 1, NULL);
+    ReadProcessMemory(processHandler, (LPCVOID)(address + 3), &prev_right, 1, NULL);
+    ReadProcessMemory(processHandler, (LPCVOID)(address + 4), &prev_jump, 1, NULL);
+    address += 5;
+
+    for (int current_frame = 1; current_frame <= MAX_RECORDING_LENGTH; current_frame++) {
+        //ReadProcessMemory(processHandler, (LPCVOID)address, &up, 1, NULL);
+        //ReadProcessMemory(processHandler, (LPCVOID)(address + 1), &down, 1, NULL);
+        ReadProcessMemory(processHandler, (LPCVOID)(address + 2), &current_left, 1, NULL);
+        ReadProcessMemory(processHandler, (LPCVOID)(address + 3), &current_right, 1, NULL);
+        ReadProcessMemory(processHandler, (LPCVOID)(address + 4), &current_jump, 1, NULL);
+        address += 5;
+
+        // repeated input for consecutive frames
+        if (!(prev_left == current_left && prev_right == current_right && prev_jump == current_jump) || current_frame == MAX_RECORDING_LENGTH) {
+            run_file << "writeInputsByFrames(processHandle, " << frames << ", " << prev_left << ", " << prev_right << ", " << prev_jump << ");\n";
+            frames = 1;
+        }
+        // if not repeated, write the command to a file and continue
+        else {
+            frames++;
+        }
+
+        prev_left = current_left;
+        prev_right = current_right;
+        prev_jump = current_jump;
+    }
+
+
+
+    run_file.close();
+
+    std::cout << "Run extracted.\n";
+
+    // when recording is finished, reset the memory address
+    address = initial_address;
+}
 
 // Overwrites "frames" frames with the given inputs (left, right, jump).
 // For reference: 120 frames = 1 second
@@ -98,7 +138,10 @@ int main()
     // Create TAS Pogostuck run
 
     // Example --> "For 60 frames, execute the following inputs: left = 0, right = 1, jump = 1 --> "rotate right jumping""
-    writeInputsByFrames(processHandle, 60, 0, 1, 1);
+    //writeInputsByFrames(processHandle, 60, 0, 1, 1);
+    
+    // To record a run, uncomment the following line, it will output the run to pogoTAScpp/TASrun.txt
+    //extractRun(processHandle);
 
     return 0;
 }
